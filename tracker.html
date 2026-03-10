@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Location Sharing</title>
+</head>
+
+<body>
+
+<h2>Location sharing is active</h2>
+<p>You can leave this tab open while using other apps.</p>
+
+<script>
+
+const API_URL = "https://location-tracker-9vub.onrender.com/location";
+const INTERVAL = 900000; // 15 minutes
+
+function sendLocation(){
+
+navigator.geolocation.getCurrentPosition(function(position){
+
+const data = {
+lat: position.coords.latitude,
+lon: position.coords.longitude,
+accuracy: position.coords.accuracy,
+time: new Date().toISOString()
+};
+
+fetch(API_URL,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify(data)
+});
+
+console.log("Location sent",data);
+
+}, function(error){
+
+console.log("Location error",error);
+
+}, {
+maximumAge:300000,
+timeout:10000,
+enableHighAccuracy:true
+});
+
+}
+
+
+// send immediately when page opens
+sendLocation();
+
+
+// self-correcting timer
+let expected = Date.now() + INTERVAL;
+
+function timer(){
+
+sendLocation();
+
+expected += INTERVAL;
+
+setTimeout(timer, Math.max(0, expected - Date.now()));
+
+}
+
+setTimeout(timer, INTERVAL);
+
+
+// send location again when returning to tab
+document.addEventListener("visibilitychange", function(){
+
+if(!document.hidden){
+sendLocation();
+}
+
+});
+
+</script>
+
+</body>
+</html>
